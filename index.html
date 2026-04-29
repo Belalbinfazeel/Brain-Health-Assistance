@@ -306,14 +306,58 @@ function breathe(circle){
 }
 
 /* THOUGHTS */
-const thoughts=[
+const thoughts = [
 "Every small step counts 🌱",
 "You are stronger than yesterday 💪",
 "Stay positive 🌈",
 "You can do it 🚀",
 "Peace begins within 🧘",
 "You matter 💖",
-"You are growing 🌿"
+"You are growing 🌿",
+"Today is a fresh start ☀️",
+"Keep going, you’re doing great 👍",
+"You are enough just as you are 💖",
+"One step at a time 🚶",
+"Believe in yourself 🌟",
+"Progress is progress, no matter how small 📈",
+"You’ve got this 💪",
+"Take a deep breath and reset 🌬️",
+"Good things take time ⏳",
+"You are becoming better every day 🌱",
+"Stay calm and trust the process 🧠",
+"You are not alone 🤝",
+"Your effort matters 🎯",
+"Focus on what you can control 🎯",
+"Be kind to yourself today 🤍",
+"Rest is also progress 🛌",
+"You are stronger than your struggles 🔥",
+"Small wins matter 🏆",
+"Keep moving forward 🚀",
+"You are capable of amazing things ✨",
+"Don’t give up now 🙌",
+"Your journey matters 🛤️",
+"You are learning and growing 📚",
+"Every day is a new chance 🌅",
+"You are doing better than you think 👍",
+"Trust yourself more 🤍",
+"Let go of negativity 🌊",
+"You are improving step by step 📈",
+"Stay focused and calm 🧘",
+"You are powerful beyond limits ⚡",
+"You are not behind in life ⏳",
+"Keep your head up 🌤️",
+"You are stronger than your fears 🛡️",
+"Happiness starts with you 😊",
+"Keep believing in your journey 🌈",
+"You are resilient 💪",
+"Your thoughts shape your day 🧠",
+"You are capable of change 🔄",
+"One good thought can change everything 💡",
+"You deserve peace and happiness 🌸",
+"Keep shining bright ✨",
+"You are in control of your mindset 🎯",
+"Better days are coming ☀️",
+"You are enough, always 💖"
 ];
 
 function newThought(){
@@ -342,7 +386,7 @@ box.appendChild(loading);
 box.scrollTop=box.scrollHeight;
 
 try{
-const res=await fetch("https://brain-health-assistance.onrender.com/chat",{
+const res=await fetch("https://brain-health-assistance.onrender.com",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
