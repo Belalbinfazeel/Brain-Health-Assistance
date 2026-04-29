@@ -6,7 +6,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
 /* ===== GLOBAL ===== */
 body {
   margin: 0;
@@ -95,7 +94,7 @@ textarea, input {
   border: none;
 }
 
-/* CHAT INPUT + BUTTON FIX */
+/* CHAT INPUT */
 #chatInput {
   height: 42px;
   box-sizing: border-box;
@@ -121,34 +120,25 @@ button {
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  scroll-behavior: smooth;
 }
 
-/* WhatsApp style messages */
+/* messages */
 .msg {
   max-width: 75%;
   padding: 10px 14px;
   margin: 6px 0;
   border-radius: 16px;
   font-size: 14px;
-  line-height: 1.4;
-  word-wrap: break-word;
 }
 
-/* USER */
 .user {
   align-self: flex-end;
   background: #25D366;
-  color: white;
-  border-bottom-right-radius: 4px;
 }
 
-/* AI */
 .ai {
   align-self: flex-start;
   background: #2f2f2f;
-  color: white;
-  border-bottom-left-radius: 4px;
 }
 
 /* BREATHING */
@@ -171,7 +161,6 @@ body.dark {
 }
 body.dark .card { background: rgba(0,0,0,0.4); }
 body.dark .theme-btn { background: white; color: black; }
-
 </style>
 </head>
 
@@ -238,11 +227,10 @@ body.dark .theme-btn { background: white; color: black; }
 <script>
 
 /* CLOCK */
-function updateClock(){
+setInterval(()=>{
   document.getElementById("clock").innerText =
     new Date().toLocaleTimeString();
-}
-setInterval(updateClock,1000);
+},1000);
 
 /* THEME */
 function toggleTheme(){
@@ -264,7 +252,14 @@ function selectMood(val){
 }
 
 function saveMood(){
-  moodHistory.push({value:selectedValue});
+  moodHistory.push({
+    value: selectedValue,
+    note: document.getElementById("note").value,
+    time: Date.now()
+  });
+
+  document.getElementById("note").value = "";
+
   localStorage.setItem("moods",JSON.stringify(moodHistory));
   updateChart();
 }
@@ -310,57 +305,15 @@ function breathe(circle){
   },4000);
 }
 
-/* THOUGHTS (50+) */
-const thoughts = [
+/* THOUGHTS */
+const thoughts=[
 "Every small step counts 🌱",
 "You are stronger than yesterday 💪",
-"Your journey matters 🚶",
-"Good things are coming 🌈",
-"You deserve peace ✨",
-"Keep pushing forward 🚀",
-"You are doing better than you think 👍",
-"You’ve got this 💯",
-"Take a deep breath 🌬️",
-"Be proud of yourself 🏆",
-"Stay hopeful 🌤️",
-"Keep believing 💡",
-"You are growing 🌿",
-"Everything takes time ⏳",
-"You are enough 💖",
-"Trust yourself 🤝",
-"Stay calm 🧠",
-"You are not alone 🤗",
-"One step at a time 📅",
-"You matter 💎",
-"Keep going 🏃",
-"Let go of stress 🌊",
-"You are powerful 💥",
-"Smile 😊",
 "Stay positive 🌈",
-"Focus on progress 📈",
-"You are learning 📘",
-"Be kind to yourself 🌸",
-"Rest is important 🛌",
-"You are unique 🌟",
-"Stay strong 💪",
-"You will overcome this 🔥",
-"Peace begins within 🧘",
-"You are enough as you are 💫",
-"Don’t give up 🙌",
-"Keep shining ✨",
-"You are improving every day 🌞",
-"Your effort matters 🎯",
-"Stay patient 🕊️",
-"You are valuable 💖",
 "You can do it 🚀",
-"Be gentle with yourself 🤍",
-"You are resilient 🧠",
-"Better days ahead ☀️",
-"Keep moving forward ➡️",
-"You are capable ⚡",
-"Stay motivated 🔥",
-"Your story is important 📖",
-"You matter more than you think 💎"
+"Peace begins within 🧘",
+"You matter 💖",
+"You are growing 🌿"
 ];
 
 function newThought(){
@@ -369,7 +322,7 @@ thoughts[Math.floor(Math.random()*thoughts.length)];
 }
 newThought();
 
-/* CHAT (GEMINI BACKEND) */
+/* CHAT */
 async function sendMessage(){
 const input=document.getElementById("chatInput");
 const box=document.getElementById("chatBox");
@@ -378,15 +331,9 @@ if(!input.value.trim())return;
 
 const msg=input.value;
 
-/* USER MESSAGE */
-const userMsg=document.createElement("div");
-userMsg.className="msg user";
-userMsg.innerText=msg;
-box.appendChild(userMsg);
-
+box.innerHTML += `<div class="msg user">${msg}</div>`;
 input.value="";
 
-/* AI LOADING */
 const loading=document.createElement("div");
 loading.className="msg ai";
 loading.innerText="Typing...";
@@ -398,11 +345,17 @@ try{
 const res=await fetch("https://brain-health-assistance.onrender.com/chat",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({message:msg})
+body:JSON.stringify({
+message: msg,
+graphData:{
+values: moodHistory.map(m=>m.value),
+notes: moodHistory.map(m=>m.note)
+}
+})
 });
 
 const data=await res.json();
-loading.innerText=data.reply||"No response";
+loading.innerText=data.reply;
 
 }catch{
 loading.innerText="⚠️ Server error";
