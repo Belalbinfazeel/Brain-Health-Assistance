@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Brain Health Assistance</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+/* ===== GLOBAL ===== */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#ff7e5f,#4facfe);
+  color: white;
+  padding: 20px;
+  transition: 0.4s;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  position: relative;
+}
+
+/* TOP RIGHT */
+.top-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* CLOCK */
+#clock {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* BUTTONS */
+.top-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.reset-btn { background: red; color: white; }
+.theme-btn { background: black; color: white; }
+
+/* GRID */
+.grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 20px;
+}
+
+/* CARDS */
+.card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+  border-radius: 16px;
+}
+
+/* LAYOUT */
+.chat { grid-column: 3; grid-row: 1 / span 2; }
+.graph { grid-column: 1 / span 2; }
+
+/* MOODS */
+.moods {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  gap: 8px;
+}
+
+.mood-btn {
+  background: rgba(255,255,255,0.25);
+  padding: 10px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* INPUT */
+textarea, input {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+/* CHAT INPUT + BUTTON FIX */
+#chatInput {
+  height: 42px;
+  box-sizing: border-box;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* CHAT BOX */
+.chat-box {
+  height: 400px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.2);
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+}
+
+/* WhatsApp style messages */
+.msg {
+  max-width: 75%;
+  padding: 10px 14px;
+  margin: 6px 0;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* USER */
+.user {
+  align-self: flex-end;
+  background: #25D366;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* AI */
+.ai {
+  align-self: flex-start;
+  background: #2f2f2f;
+  color: white;
+  border-bottom-left-radius: 4px;
+}
+
+/* BREATHING */
+.circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+  font-weight: bold;
+  transition: transform 4s ease-in-out;
+}
+
+/* DARK MODE */
+body.dark {
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+}
+body.dark .card { background: rgba(0,0,0,0.4); }
+body.dark .theme-btn { background: white; color: black; }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>🧠 Brain Health Assistance</h2>
+
+  <div class="top-right">
+    <div id="clock"></div>
+    <button class="top-btn theme-btn" onclick="toggleTheme()">🌙</button>
+    <button class="top-btn reset-btn" onclick="resetData()">Reset</button>
+  </div>
+</div>
+
+<div class="grid">
+
+<!-- MOOD -->
+<div class="card">
+<h3>Mood Tracker</h3>
+
+<div class="moods">
+<div class="mood-btn" onclick="selectMood(5)">😄</div>
+<div class="mood-btn" onclick="selectMood(4)">😊</div>
+<div class="mood-btn" onclick="selectMood(3)">😐</div>
+<div class="mood-btn" onclick="selectMood(2)">😔</div>
+<div class="mood-btn" onclick="selectMood(1)">😡</div>
+</div>
+
+<textarea id="note" placeholder="Write thoughts..."></textarea>
+<button onclick="saveMood()">Save</button>
+
+</div>
+
+<!-- RELAX -->
+<div class="card">
+<h3>Relax</h3>
+
+<div id="circle" class="circle">Start</div>
+<button onclick="toggleBreathing()">Start Breathing</button>
+
+<p id="motivationText"></p>
+<button onclick="newThought()">New Thought</button>
+</div>
+
+<!-- CHAT -->
+<div class="card chat">
+<h3>AI Chat</h3>
+
+<div id="chatBox" class="chat-box"></div>
+
+<input id="chatInput" placeholder="Talk...">
+<button onclick="sendMessage()">Send</button>
+</div>
+
+<!-- GRAPH -->
+<div class="card graph">
+<h3>Mood Graph</h3>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+
+/* CLOCK */
+function updateClock(){
+  document.getElementById("clock").innerText =
+    new Date().toLocaleTimeString();
+}
+setInterval(updateClock,1000);
+
+/* THEME */
+function toggleTheme(){
+  document.body.classList.toggle("dark");
+}
+
+/* RESET */
+function resetData(){
+  localStorage.clear();
+  location.reload();
+}
+
+/* MOOD */
+let selectedValue=3;
+let moodHistory=JSON.parse(localStorage.getItem("moods"))||[];
+
+function selectMood(val){
+  selectedValue=val;
+}
+
+function saveMood(){
+  moodHistory.push({value:selectedValue});
+  localStorage.setItem("moods",JSON.stringify(moodHistory));
+  updateChart();
+}
+
+/* CHART */
+const chart=new Chart(document.getElementById("chart"),{
+type:"line",
+data:{labels:[],datasets:[{label:"Mood",data:[]}]}
+});
+
+function updateChart(){
+chart.data.labels=moodHistory.map((_,i)=>i+1);
+chart.data.datasets[0].data=moodHistory.map(m=>m.value);
+chart.update();
+}
+updateChart();
+
+/* BREATHING */
+let breathing=false;
+
+function toggleBreathing(){
+  breathing=!breathing;
+  const circle=document.getElementById("circle");
+
+  if(breathing){
+    breathe(circle);
+  } else {
+    circle.innerText="Stopped";
+    circle.style.transform="scale(1)";
+  }
+}
+
+function breathe(circle){
+  if(!breathing) return;
+
+  circle.innerText="Inhale";
+  circle.style.transform="scale(1.4)";
+
+  setTimeout(()=>{
+    circle.innerText="Exhale";
+    circle.style.transform="scale(1)";
+    setTimeout(()=>breathe(circle),4000);
+  },4000);
+}
+
+/* THOUGHTS (50+) */
+const thoughts = [
+"Every small step counts 🌱",
+"You are stronger than yesterday 💪",
+"Your journey matters 🚶",
+"Good things are coming 🌈",
+"You deserve peace ✨",
+"Keep pushing forward 🚀",
+"You are doing better than you think 👍",
+"You’ve got this 💯",
+"Take a deep breath 🌬️",
+"Be proud of yourself 🏆",
+"Stay hopeful 🌤️",
+"Keep believing 💡",
+"You are growing 🌿",
+"Everything takes time ⏳",
+"You are enough 💖",
+"Trust yourself 🤝",
+"Stay calm 🧠",
+"You are not alone 🤗",
+"One step at a time 📅",
+"You matter 💎",
+"Keep going 🏃",
+"Let go of stress 🌊",
+"You are powerful 💥",
+"Smile 😊",
+"Stay positive 🌈",
+"Focus on progress 📈",
+"You are learning 📘",
+"Be kind to yourself 🌸",
+"Rest is important 🛌",
+"You are unique 🌟",
+"Stay strong 💪",
+"You will overcome this 🔥",
+"Peace begins within 🧘",
+"You are enough as you are 💫",
+"Don’t give up 🙌",
+"Keep shining ✨",
+"You are improving every day 🌞",
+"Your effort matters 🎯",
+"Stay patient 🕊️",
+"You are valuable 💖",
+"You can do it 🚀",
+"Be gentle with yourself 🤍",
+"You are resilient 🧠",
+"Better days ahead ☀️",
+"Keep moving forward ➡️",
+"You are capable ⚡",
+"Stay motivated 🔥",
+"Your story is important 📖",
+"You matter more than you think 💎"
+];
+
+function newThought(){
+document.getElementById("motivationText").innerText=
+thoughts[Math.floor(Math.random()*thoughts.length)];
+}
+newThought();
+
+/* CHAT (GEMINI BACKEND) */
+async function sendMessage(){
+const input=document.getElementById("chatInput");
+const box=document.getElementById("chatBox");
+
+if(!input.value.trim())return;
+
+const msg=input.value;
+
+/* USER MESSAGE */
+const userMsg=document.createElement("div");
+userMsg.className="msg user";
+userMsg.innerText=msg;
+box.appendChild(userMsg);
+
+input.value="";
+
+/* AI LOADING */
+const loading=document.createElement("div");
+loading.className="msg ai";
+loading.innerText="Typing...";
+box.appendChild(loading);
+
+box.scrollTop=box.scrollHeight;
+
+try{
+const res=await fetch("http://localhost:5000/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({message:msg})
+});
+
+const data=await res.json();
+loading.innerText=data.reply||"No response";
+
+}catch{
+loading.innerText="⚠️ Server error";
+}
+
+box.scrollTop=box.scrollHeight;
+}
+
+</script>
+
+</body>
+</html>
